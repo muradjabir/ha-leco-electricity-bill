@@ -1,6 +1,5 @@
 {
   "name": "LECO Electricity Bill (Sri Lanka)",
-  "country": "LK",
   "render_readme": true,
-  "homeassistant": "2024.1.0"
+  "homeassistant": "2023.1.0"
 }
