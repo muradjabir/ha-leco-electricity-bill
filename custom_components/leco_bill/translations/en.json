@@ -1,0 +1,43 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Lanka Electricity Company (LECO)",
+        "description": "Enter your 10-digit LECO Electricity Account Number (starting with 01 to 07) to track your bill balance and connection status.",
+        "data": {
+          "account_number": "Account Number (10 digits)",
+          "scan_interval_hours": "Update Interval in Hours (minimum 12 hours)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to LECO InstantPay portal. Please verify internet connection or check if portal is reachable.",
+      "invalid_account_number": "Invalid account number. LECO electricity account numbers must be 10 digits starting with 01 to 07.",
+      "unknown": "Unexpected error occurred."
+    },
+    "abort": {
+      "already_configured": "This LECO account is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "LECO Integration Options",
+        "description": "Adjust the update polling frequency. To avoid overloading LECO servers, the minimum permitted interval is 12 hours.",
+        "data": {
+          "scan_interval_hours": "Update Interval in Hours (minimum 12 hours)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "bill_balance": {
+        "name": "Electricity Bill Balance"
+      },
+      "connection_status": {
+        "name": "Connection Status"
+      }
+    }
+  }
+}
