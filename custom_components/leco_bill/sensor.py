@@ -44,6 +44,13 @@ class LECOBillSensor(CoordinatorEntity[LECOBillCoordinator], SensorEntity):
     _attr_state_class = SensorStateClass.TOTAL
     _attr_native_unit_of_measurement = "LKR"
     _attr_icon = "mdi:lightning-bolt-circle"
+    _unrecorded_attributes = frozenset(
+        {
+            "customer_name",
+            "address",
+            "meter_number",
+        }
+    )
 
     def __init__(
         self,
@@ -145,11 +152,9 @@ class LECOConnectionStatusSensor(CoordinatorEntity[LECOBillCoordinator], SensorE
             "account_number": self._account_number,
             "connection_status": self.coordinator.data.get("connection_status"),
             "account_status": self.coordinator.data.get("account_status"),
-            "customer_name": self.coordinator.data.get("customer_name"),
-            "meter_number": self.coordinator.data.get("meter_no"),
             "tariff": self.coordinator.data.get("tariff"),
             "branch": self.coordinator.data.get("branch"),
             "csc": self.coordinator.data.get("csc"),
-            "address": self.coordinator.data.get("address"),
+            "service_type": self.coordinator.data.get("service_type"),
             "last_synced": self.coordinator.data.get("last_synced"),
         }
