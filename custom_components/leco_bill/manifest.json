@@ -1,6 +1,7 @@
 {
   "domain": "leco_bill",
   "name": "LECO Electricity Bill (Sri Lanka)",
+  "after_dependencies": ["recorder"],
   "codeowners": ["@muradjabir"],
   "config_flow": true,
   "documentation": "https://github.com/muradjabir/ha-leco-electricity-bill",
