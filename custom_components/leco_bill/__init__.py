@@ -17,7 +17,7 @@ from .const import (
 from .coordinator import LECOBillCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.NUMBER]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -43,13 +43,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle options update."""
-    coordinator: LECOBillCoordinator = hass.data[DOMAIN][entry.entry_id]
-    scan_interval = entry.options.get(
-        CONF_SCAN_INTERVAL_HOURS, DEFAULT_SCAN_INTERVAL_HOURS
-    )
-    coordinator.update_interval = timedelta(hours=scan_interval)
-    _LOGGER.info("Updated LECO scan interval to %d hours", scan_interval)
+    """Handle options update by reloading the config entry."""
+    _LOGGER.info("Reloading LECO entry %s due to options update", entry.entry_id)
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

@@ -10,13 +10,26 @@ from homeassistant import config_entries
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.selector import (
+    BooleanSelector,
+    EntitySelector,
+    EntitySelectorConfig,
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
+)
 
 from .const import (
     DOMAIN,
     CONF_ACCOUNT_NUMBER,
     CONF_SCAN_INTERVAL_HOURS,
+    CONF_KWH_ENTITY,
+    CONF_BILLING_DAY,
+    CONF_IS_CUMULATIVE,
     DEFAULT_SCAN_INTERVAL_HOURS,
     MIN_SCAN_INTERVAL_HOURS,
+    DEFAULT_BILLING_DAY,
+    DEFAULT_IS_CUMULATIVE,
 )
 from .coordinator import InvalidAccountError, fetch_leco_bill_sync
 
@@ -63,7 +76,11 @@ class LECOConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 info = await validate_input(self.hass, user_input)
-                return self.async_create_entry(title=info["title"], data=user_input)
+                clean_input = dict(user_input)
+                clean_input[CONF_ACCOUNT_NUMBER] = account_no
+                if not clean_input.get(CONF_KWH_ENTITY):
+                    clean_input.pop(CONF_KWH_ENTITY, None)
+                return self.async_create_entry(title=info["title"], data=clean_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAccountNumber:
@@ -77,6 +94,17 @@ class LECOConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Optional(
                     CONF_SCAN_INTERVAL_HOURS, default=DEFAULT_SCAN_INTERVAL_HOURS
                 ): vol.All(vol.Coerce(int), vol.Range(min=MIN_SCAN_INTERVAL_HOURS)),
+                vol.Optional(CONF_KWH_ENTITY): EntitySelector(
+                    EntitySelectorConfig(domain=["sensor", "input_number", "number"])
+                ),
+                vol.Optional(
+                    CONF_BILLING_DAY, default=DEFAULT_BILLING_DAY
+                ): NumberSelector(
+                    NumberSelectorConfig(min=1, max=31, mode=NumberSelectorMode.BOX)
+                ),
+                vol.Optional(
+                    CONF_IS_CUMULATIVE, default=DEFAULT_IS_CUMULATIVE
+                ): BooleanSelector(),
             }
         )
 
@@ -93,26 +121,54 @@ class LECOOptionsFlowHandler(config_entries.OptionsFlow):
     ) -> FlowResult:
         """Manage options."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            clean_input = dict(user_input)
+            if not clean_input.get(CONF_KWH_ENTITY):
+                clean_input[CONF_KWH_ENTITY] = None
+            return self.async_create_entry(title="", data=clean_input)
 
         current_interval = self.config_entry.options.get(
             CONF_SCAN_INTERVAL_HOURS,
-            self.config_entry.data.get(
-                CONF_SCAN_INTERVAL_HOURS, DEFAULT_SCAN_INTERVAL_HOURS
-            ),
+            self.config_entry.data.get(CONF_SCAN_INTERVAL_HOURS, DEFAULT_SCAN_INTERVAL_HOURS),
+        )
+        current_kwh_entity = self.config_entry.options.get(
+            CONF_KWH_ENTITY,
+            self.config_entry.data.get(CONF_KWH_ENTITY),
+        )
+        current_billing_day = self.config_entry.options.get(
+            CONF_BILLING_DAY,
+            self.config_entry.data.get(CONF_BILLING_DAY, DEFAULT_BILLING_DAY),
+        )
+        current_is_cumulative = self.config_entry.options.get(
+            CONF_IS_CUMULATIVE,
+            self.config_entry.data.get(CONF_IS_CUMULATIVE, DEFAULT_IS_CUMULATIVE),
         )
 
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_SCAN_INTERVAL_HOURS,
-                        default=current_interval,
-                    ): vol.All(vol.Coerce(int), vol.Range(min=MIN_SCAN_INTERVAL_HOURS)),
-                }
-            ),
+        schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_SCAN_INTERVAL_HOURS,
+                    default=current_interval,
+                ): vol.All(vol.Coerce(int), vol.Range(min=MIN_SCAN_INTERVAL_HOURS)),
+                vol.Optional(
+                    CONF_KWH_ENTITY,
+                    description={"suggested_value": current_kwh_entity},
+                ): EntitySelector(
+                    EntitySelectorConfig(domain=["sensor", "input_number", "number"])
+                ),
+                vol.Optional(
+                    CONF_BILLING_DAY,
+                    default=current_billing_day,
+                ): NumberSelector(
+                    NumberSelectorConfig(min=1, max=31, mode=NumberSelectorMode.BOX)
+                ),
+                vol.Optional(
+                    CONF_IS_CUMULATIVE,
+                    default=current_is_cumulative,
+                ): BooleanSelector(),
+            }
         )
+
+        return self.async_show_form(step_id="init", data_schema=schema)
 
 
 class CannotConnect(HomeAssistantError):
@@ -120,4 +176,4 @@ class CannotConnect(HomeAssistantError):
 
 
 class InvalidAccountNumber(HomeAssistantError):
-    """Error to indicate account number is invalid."""
+    """Error to indicate there is an invalid account number."""

@@ -18,6 +18,9 @@ This custom component pulls bill and connection details daily from the official 
 - **Entities Provided per Account:**
   - `sensor.electricity_bill_balance`: Current bill balance in `LKR` (`monetary` device class).
   - `sensor.connection_status`: Live connection/account status reported by LECO (`ACCOUNT ACTIVATED`, `NORMAL`, etc.).
+  - `sensor.calculated_electricity_bill`: Real-time domestic bill calculation based on your monthly cycle consumption and the official PUCSL Domestic Tariff schedule.
+  - `sensor.predicted_electricity_bill`: Projected month-end electricity bill based on your average daily consumption rate.
+  - `number.electricity_consumption_input`: Dedicated input number entity for testing or entering manual monthly kWh consumption.
 - **Rich Attributes:**
   - `account_number`: Your 10-digit LECO account number
   - `customer_name`: Name registered with LECO
@@ -62,8 +65,13 @@ Click the button above to directly open and install the repository in HACS, or f
 1. In Home Assistant, navigate to **Settings** > **Devices & Services**.
 2. Click **Add Integration** in the bottom right corner.
 3. Search for **LECO Electricity Bill (Sri Lanka)**.
-4. Enter your 10-digit LECO Account Number (e.g. `0211140204`) and submit.
-5. Two sensors (`Electricity Bill Balance` and `Connection Status`) will be created under your LECO device.
+4. Fill in the configuration fields:
+   - **Account Number (10 digits):** Your LECO account number starting with 01 to 07 (e.g. `0211140204`).
+   - **Update Interval:** Frequency in hours to check the LECO portal (default: 24, minimum: 12).
+   - **kWh Consumed Entity (optional):** Choose your energy sensor or utility meter (e.g. `sensor.home_grid_import_energy` or `sensor.monthly_grid_import`). If left empty, you can use the built-in manual input number entity.
+   - **Monthly Billing Day (1 - 31):** Day of the month your LECO meter is read and billing cycle resets (e.g. 15).
+   - **Cumulative Energy Sensor:** Enabled by default. Automatically determines cycle consumption from Home Assistant statistics when using cumulative lifetime energy meters. Disable if your entity already resets monthly.
+5. All settings can be adjusted at any time via **Configure** on the integration card.
 
 ---
 
